@@ -1,0 +1,9 @@
+streamlit==1.37.0
+pandas==2.2.2
+openai==1.37.0
+langchain==0.2.11
+langchain-core==0.2.10
+langchain-chroma==0.1.1
+langchain-openai==0.2.5
+chromadb==0.5.4
+python-dotenv==1.0.1
