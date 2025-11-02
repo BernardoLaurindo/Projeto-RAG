@@ -10,29 +10,22 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 
 
-os.environ["OPENAI_API_KEY"] = "SUA_API_KEY_AQUI"
+os.environ["OPENAI_API_KEY"] = ""
 
 DATA_PATH = "data/produtos.csv"
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# ============================
-# CONFIG STREAMLIT
-# ============================
 def configurar_pagina():
     st.set_page_config(
-        page_title="MarketGuard – Anti-Fraude",
-        page_icon="🛡️",
+        page_title="MarketGuard - Anti-Fraude",
         layout="wide"
     )
-    st.title("🛡️ MarketGuard – Detecção Inteligente de Produtos Falsificados")
+    st.title("🛡️ MarketGuard - Detecção Inteligente de Produtos Falsificados")
     st.markdown("""
     Plataforma para análise conversacional com RAG para ajudar analistas
     na detecção de produtos suspeitos de falsificação.
     """)
 
-# ============================
-# CARREGAMENTO E PREPARO DA BASE
-# ============================
 def carregar_base():
     if not os.path.exists(DATA_PATH):
         df = pd.DataFrame(columns=[
@@ -55,9 +48,6 @@ def criar_documentos_produtos(df):
         docs.append(Document(page_content=texto))
     return docs
 
-# ============================
-# BASE VETORIAL CHROMA (RAG)
-# ============================
 def criar_base_vetorial(df):
     try:
         docs = criar_documentos_produtos(df)
@@ -94,37 +84,31 @@ def buscar_rag(pergunta, vectorstore):
         st.error(f"Erro no RAG: {e}")
         return None, []
 
-# ============================
-# FUNÇÕES DE ANÁLISE EXIGIDAS
-# ============================
 def calcular_risco(prod):
     motivos = []
     score = 0
 
     if prod["price"] < 0.6 * df["price"].mean():
-        motivos.append("💸 Preço muito baixo")
+        motivos.append("Preço muito baixo")
         score += 1
     if prod["seller_rating"] < 3.5:
-        motivos.append("⭐ Rating do vendedor baixo")
+        motivos.append("Rating do vendedor baixo")
         score += 1
     if prod["product_images"] < 3:
-        motivos.append("🖼️ Poucas imagens")
+        motivos.append("Poucas imagens")
         score += 1
     if prod["description_length"] < 100:
-        motivos.append("📄 Descrição curta")
+        motivos.append("Descrição curta")
         score += 1
     if prod["shipping_time_days"] > 20:
-        motivos.append("🚚 Entrega longa")
+        motivos.append("Entrega longa")
         score += 1
     if re.search(r'(.)\1\1', prod["brand"], re.IGNORECASE):
-        motivos.append("⚠️ Marca com ortografia suspeita")
+        motivos.append("Marca com ortografia suspeita")
         score += 1
 
     return score, motivos
 
-# ============================
-# INTERFACE
-# ============================
 def main():
     configurar_pagina()
     global df
@@ -138,22 +122,20 @@ def main():
     vectorstore, qtd = criar_base_vetorial(df)
     st.info(f"Base vetorial criada com {qtd} embeddings")
 
-    tab1, tab2, tab3 = st.tabs(["🔍 Consulta RAG", "🚨 Análise de Risco", "➕ Novo Produto"])
+    tab1, tab2, tab3 = st.tabs(["Consulta RAG", "Análise de Risco", "Novo Produto"])
 
-    # TAB 1 - RAG
     with tab1:
         st.subheader("Consulta Inteligente")
         q = st.text_input("Ex: 'produtos de luxo suspeitos'")
         if st.button("Buscar"):
             resp, docs = buscar_rag(q, vectorstore)
             if resp:
-                st.markdown("### ✅ Resposta:")
+                st.markdown("### Resposta:")
                 st.write(resp)
-                with st.expander("📌 Trechos utilizados:"):
+                with st.expander("Trechos utilizados:"):
                     for i, d in enumerate(docs):
                         st.write(f"{i+1}️⃣ {d.page_content}")
 
-    # TAB 2 - Risk
     with tab2:
         st.subheader("Analisar risco por product_id")
         pid = st.text_input("Digite o Product ID")
@@ -168,7 +150,6 @@ def main():
             else:
                 st.error("Produto não encontrado")
 
-    # TAB 3 - Cadastro
     with tab3:
         st.subheader("Adicionar produto suspeito")
         col1, col2 = st.columns(2)
@@ -201,7 +182,7 @@ def main():
             }
             df.loc[len(df)] = novo
             df.to_csv(DATA_PATH, index=False)
-            st.success("✅ Produto cadastrado e indexado!")
+            st.success("Produto cadastrado e indexado!")
 
 if __name__ == "__main__":
     main()
